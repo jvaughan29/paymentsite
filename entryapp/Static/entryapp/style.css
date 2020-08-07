@@ -1,0 +1,10 @@
+.center {
+  margin: auto;
+  width: 50%;
+  border: 0px solid green;
+  padding: 10px;
+.form {
+  border-radius: 15px;
+  background-color: #F2F2F2;
+  padding: 20px;
+}
