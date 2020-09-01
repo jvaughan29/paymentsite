@@ -15,3 +15,6 @@ def index(request):
         form = PaymentForm()
         return render(request, "entryapp/index.html", {"form": form})
 
+def results(request):
+    return HttpResponse("Hello, world. You're at the list of entries")
+
