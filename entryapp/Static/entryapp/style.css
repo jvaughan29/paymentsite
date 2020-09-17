@@ -8,3 +8,14 @@
   background-color: #F2F2F2;
   padding: 20px;
 }
+#mainBox {
+    background: #e0e0df none repeat scroll 0% 50%;
+    color: #3c3d3c;
+    margin-left: auto;
+    margin-right: auto;
+    min-height: 80%;
+    width: 80%;
+    box-shadow: 5px 10px 5px;
+    border-radius: 25px;
+    padding-left: 1em;
+}

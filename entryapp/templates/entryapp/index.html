@@ -1,26 +1,16 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="en">
-<head>
-    <link rel="stylesheet" type="text/css" href="{% static 'entryapp/style.css' %}">
-    <meta charset="UTF-8">
-    <title>Payment Entry</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<img src="{% static 'entryapp/Images/Logo.png' %}" alt="Logo">
+{% block content %}
 
-<div class="center">
-<div class="form">
+<h1>Payment Entry</h1>
 
-<form action="{% url 'index' %}" method="post">
+<br/>
+
+    <form action="{% url 'index' %}" method="post">
     {% csrf_token %}
-    {{form}}
+    {{form.as_p}}
     <input type = "submit" value = "Submit">
-</form>
+    </form>
 
-</div>
-</div>
+{% endblock %}
 
-</body>
-</html>
