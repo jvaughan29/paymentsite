@@ -5,12 +5,13 @@
 <h1>Payment Entry</h1>
 
 <br/>
-
-    <form action="{% url 'index' %}" method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <input type = "submit" value = "Submit" class="btn btn-secondary">
-    </form>
+    <div class="form-group">
+        <form action="{% url 'index' %}" method="post">
+        {% csrf_token %}
+        {{form.as_p}}
+        <input type = "submit" value = "Submit" class="btn btn-secondary">
+        </form>
+    </div>
 
 {% endblock %}
 
