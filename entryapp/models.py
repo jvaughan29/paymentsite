@@ -23,5 +23,3 @@ class PaymentEntry(models.Model):
 
 
 
-   # to limit options for location and type (e.g. radio button or drop down list), create new models and reference as foreign key
-   #
