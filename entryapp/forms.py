@@ -12,11 +12,12 @@ from .models import PaymentEntry
 class PaymentForm(ModelForm):
     class Meta:
         model = PaymentEntry
-        fields = ("name_text", "labid_text", "amount_double", "type", "location")
+        fields = ("name_text", "labid_text", "amount_double", "type", "location", "staff_code")
         widgets = {
             'name_text': forms.TextInput(attrs={'class': 'form-control'}),
             "labid_text": forms.TextInput(attrs={'class': 'form-control'}),
             "amount_double": forms.TextInput(attrs={'class': 'form-control'}),
             "type": forms.Select(attrs={'class': 'form-control'}),
-            "location": forms.Select(attrs={'class': 'form-control'})
+            "location": forms.Select(attrs={'class': 'form-control'}),
+            "staff_code": forms.TextInput(attrs={'class': 'form-control'})
         }

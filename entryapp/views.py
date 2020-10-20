@@ -4,11 +4,10 @@ import csv
 import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
-from django.template import loader
+
 
 from .forms import PaymentForm
 from .models import PaymentEntry
-
 
 def index(request):
     if request.method == "POST":
@@ -85,7 +84,7 @@ def export(request):
   # Create the HttpResponse object with the appropriate CSV header.
    data = download_csv(request, PaymentEntry.objects.all())
    response = HttpResponse(data, content_type='text/csv')
-   response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+   response['Content-Disposition'] = 'attachment; filename="Payments.csv"'
    return response
 
 
