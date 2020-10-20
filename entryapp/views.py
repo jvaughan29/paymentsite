@@ -4,6 +4,7 @@ import csv
 import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
+from django.template import loader
 
 from .forms import PaymentForm
 from .models import PaymentEntry
@@ -31,7 +32,13 @@ def receipt(request):
 
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
-    p.drawString(200, 800, "Official Receipt")
+    p.drawString(200, 800, "Capital Pathology")
+    p.drawString(200, 700, "Official Receipt")
+    p.drawString(100, 600, "Patient Name:")
+    p.drawString(100, 500, "Invoice Number:")
+    p.drawString(100, 400, "Amount Paid:")
+    p.drawString(100, 300, "Location:")
+    p.drawString(100, 200, "Receipt Number:")
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -43,13 +50,42 @@ def receipt(request):
     return FileResponse(buffer, as_attachment=True, filename='receipt.pdf')
 
 def results(request):
-    # Create the HttpResponse object with the appropriate CSV header.
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+    return render(request, "entryapp/results.html")
 
-    writer = csv.writer(response)
-    writer.writerow(['First row', 'Foo', 'Bar', 'Baz'])
-    writer.writerow(['Second row', 'A', 'B', 'C', '"Testing"', "Here's a quote"])
+def download_csv(request, queryset):
 
-    return response
+  model = queryset.model
+  model_fields = model._meta.fields + model._meta.many_to_many
+  field_names = [field.name for field in model_fields]
+
+  response = HttpResponse(content_type='text/csv')
+  response['Content-Disposition'] = 'attachment; filename="export.csv"'
+
+  # the csv writer
+  writer = csv.writer(response, delimiter=",")
+  # Write a first row with header information
+  writer.writerow(field_names)
+  # Write data rows
+  for row in queryset:
+      values = []
+      for field in field_names:
+          value = getattr(row, field)
+          if callable(value):
+              try:
+                  value = value() or ''
+              except:
+                  value = 'Error retrieving value'
+          if value is None:
+              value = ''
+          values.append(value)
+      writer.writerow(values)
+  return response
+
+def export(request):
+  # Create the HttpResponse object with the appropriate CSV header.
+   data = download_csv(request, PaymentEntry.objects.all())
+   response = HttpResponse(data, content_type='text/csv')
+   response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+   return response
+
 
