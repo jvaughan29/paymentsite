@@ -4,6 +4,8 @@ import csv
 import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Image
+
 
 
 from .forms import PaymentForm
@@ -32,15 +34,21 @@ def receipt(request):
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
 
-    latest_question_list = PaymentEntry.objects.order_by('entry_date')[:1]
+    latest_entry = PaymentEntry.objects.order_by('-entry_date')[:1]
 
-    p.drawString(200, 800, "Capital Pathology")
+    name = ', '.join([q.name_text for q in latest_entry])
+    invoice = ', '.join([q.labid_text for q in latest_entry])
+    paid = ', '.join([str(q.amount_double) for q in latest_entry])
+    location = ', '.join([str(q.location) for q in latest_entry])
+    receipt = ', '.join([q.receipt_number for q in latest_entry])
+
+    p.drawString(200, 750, "Capital Pathology")
     p.drawString(200, 700, "Official Receipt")
-    p.drawString(100, 600, "Patient Name:")
-    p.drawString(100, 500, "Invoice Number:")
-    p.drawString(100, 400, "Amount Paid:")
-    p.drawString(100, 300, "Location:")
-    p.drawString(100, 200, "Receipt Number:")
+    p.drawString(100, 600, "Patient Name: " + name)
+    p.drawString(100, 580, "Invoice Number: " + invoice)
+    p.drawString(100, 560, "Amount Paid: $" + paid)
+    p.drawString(100, 540, "Location: " + location)
+    p.drawString(100, 520, "Receipt Number: " + receipt)
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -49,7 +57,7 @@ def receipt(request):
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='receipt.pdf')
+    return FileResponse(buffer, as_attachment=True, filename=invoice+'.pdf')
 
 def results(request):
     return render(request, "entryapp/results.html")
