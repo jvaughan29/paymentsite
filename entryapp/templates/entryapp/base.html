@@ -1,5 +1,5 @@
 <!doctype html>
-
+{% load static %}
 <html lang="en">
   <head>
     <!-- Required meta tags -->
@@ -15,6 +15,11 @@
 
   <br/>
   <div class="container">
+
+    <img src="{% static 'entryapp/Images/headerlogo.jpg' %}" alt="Logo">
+
+    <br/>
+
   {% block content %}
 
   {% endblock %}
