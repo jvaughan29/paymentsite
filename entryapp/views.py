@@ -31,6 +31,9 @@ def receipt(request):
 
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
+
+    latest_question_list = PaymentEntry.objects.order_by('entry_date')[:1]
+
     p.drawString(200, 800, "Capital Pathology")
     p.drawString(200, 700, "Official Receipt")
     p.drawString(100, 600, "Patient Name:")
