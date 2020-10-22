@@ -4,9 +4,7 @@ import csv
 import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Image
-
-
+from pdfrw import PdfReader, PdfWriter, PageMerge
 
 from .forms import PaymentForm
 from .models import PaymentEntry
@@ -24,15 +22,42 @@ def index(request):
 def complete(request):
     return render(request, "entryapp/complete.html")
 
+def get_overlay_canvas() -> io.BytesIO:
+    data = io.BytesIO()
+    pdf = canvas.Canvas(data)
+
+    latest_entry = PaymentEntry.objects.order_by('-entry_date')[:1]
+
+    name = ', '.join([q.name_text for q in latest_entry])
+    invoice = ', '.join([q.labid_text for q in latest_entry])
+    paid = ', '.join([str(q.amount_double) for q in latest_entry])
+    location = ', '.join([str(q.location) for q in latest_entry])
+    receipt = ', '.join([q.receipt_number for q in latest_entry])
+    date = ', '.join([str(q.entry_date).split()[0] for q in latest_entry])
+
+    pdf.drawString(59, 480, name)
+    pdf.drawString(216, 480, invoice)
+    pdf.drawString(358, 480, "$" + paid)
+    #pdf.drawString(100, 540, "Location: " + location)
+    pdf.drawString(463, 480, date)
+    pdf.drawString(280, 375, receipt)
+    pdf.save()
+    data.seek(0)
+    return data
+
+
+def merge(overlay_canvas: io.BytesIO, template_path: str) -> io.BytesIO:
+    template_pdf = PdfReader(template_path)
+    overlay_pdf = PdfReader(overlay_canvas)
+    for page, data in zip(template_pdf.pages, overlay_pdf.pages):
+        overlay = PageMerge().add(data)[0]
+        PageMerge(page).add(overlay).render()
+    form = io.BytesIO()
+    PdfWriter().write(form, template_pdf)
+    form.seek(0)
+    return form
+
 def receipt(request):
-    # Create a file-like buffer to receive PDF data.
-    buffer = io.BytesIO()
-
-    # Create the PDF object, using the buffer as its "file."
-    p = canvas.Canvas(buffer)
-
-    # Draw things on the PDF. Here's where the PDF generation happens.
-    # See the ReportLab documentation for the full list of functionality.
 
     latest_entry = PaymentEntry.objects.order_by('-entry_date')[:1]
 
@@ -42,22 +67,12 @@ def receipt(request):
     location = ', '.join([str(q.location) for q in latest_entry])
     receipt = ', '.join([q.receipt_number for q in latest_entry])
 
-    p.drawString(200, 750, "Capital Pathology")
-    p.drawString(200, 700, "Official Receipt")
-    p.drawString(100, 600, "Patient Name: " + name)
-    p.drawString(100, 580, "Invoice Number: " + invoice)
-    p.drawString(100, 560, "Amount Paid: $" + paid)
-    p.drawString(100, 540, "Location: " + location)
-    p.drawString(100, 520, "Receipt Number: " + receipt)
-
-    # Close the PDF object cleanly, and we're done.
-    p.showPage()
-    p.save()
-
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=invoice+'.pdf')
+    canvas_data = get_overlay_canvas()
+    form = merge(canvas_data, template_path='entryapp/Static/entryapp/Receipt_Template.pdf')
+
+    return FileResponse(form, as_attachment=True, filename=invoice+'.pdf')
 
 def results(request):
     return render(request, "entryapp/results.html")
