@@ -30,7 +30,8 @@ def get_overlay_canvas() -> io.BytesIO:
 
     name = ', '.join([q.name_text for q in latest_entry])
     invoice = ', '.join([q.labid_text for q in latest_entry])
-    paid = ', '.join([str(q.amount_double) for q in latest_entry])
+    cash = latest_entry.name_text in latest_entry
+    paid = str(cash)
     location = ', '.join([str(q.location) for q in latest_entry])
     receipt = ', '.join([q.receipt_number for q in latest_entry])
     date = ', '.join([str(q.entry_date).split()[0] for q in latest_entry])
@@ -63,7 +64,7 @@ def receipt(request):
 
     name = ', '.join([q.name_text for q in latest_entry])
     invoice = ', '.join([q.labid_text for q in latest_entry])
-    paid = ', '.join([str(q.amount_double) for q in latest_entry])
+    #paid = ', '.join([str(q.amount_double) for q in latest_entry])
     location = ', '.join([str(q.location) for q in latest_entry])
     receipt = ', '.join([q.receipt_number for q in latest_entry])
 
