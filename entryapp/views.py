@@ -30,8 +30,20 @@ def get_overlay_canvas() -> io.BytesIO:
 
     name = ', '.join([q.name_text for q in latest_entry])
     invoice = ', '.join([q.labid_text for q in latest_entry])
-    cash = latest_entry.name_text in latest_entry
-    paid = str(cash)
+    cash = 0.0
+    for q in latest_entry:
+        cash = cash + q.cash_amount
+    cheque = 0.0
+    for q in latest_entry:
+        cheque = cheque + q.cheque_amount
+    eftpos = 0.0
+    for x in latest_entry:
+        eftpos = eftpos + x.eftpos_amount
+    total = cash + cheque + eftpos
+    if (total*100) % 10 == 0:
+        paid = str(total)+"0"
+    else:
+        paid = str(total)
     location = ', '.join([str(q.location) for q in latest_entry])
     receipt = ', '.join([q.receipt_number for q in latest_entry])
     date = ', '.join([str(q.entry_date).split()[0] for q in latest_entry])
