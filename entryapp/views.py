@@ -1,5 +1,6 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+import datetime
 import csv
 import io
 from django.http import FileResponse
@@ -119,9 +120,18 @@ def download_csv(request, queryset):
       writer.writerow(values)
   return response
 
-def export(request):
+def exportall(request):
   # Create the HttpResponse object with the appropriate CSV header.
    data = download_csv(request, PaymentEntry.objects.all())
+   response = HttpResponse(data, content_type='text/csv')
+   response['Content-Disposition'] = 'attachment; filename="Payments.csv"'
+   return response
+
+def exportyesterday(request):
+  # Create the HttpResponse object with the appropriate CSV header.
+   today = datetime.date.today()
+   yesterday = today - datetime.timedelta(days=1)
+   data = download_csv(request, PaymentEntry.objects.filter(entry_date__date=yesterday))
    response = HttpResponse(data, content_type='text/csv')
    response['Content-Disposition'] = 'attachment; filename="Payments.csv"'
    return response
