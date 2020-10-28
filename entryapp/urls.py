@@ -9,4 +9,5 @@ urlpatterns = [
     path('exportyesterday', views.exportyesterday, name='exportyesterday'),
     path('complete', views.complete, name='complete'),
     path('receipt', views.receipt, name='receipt'),
+    path('summaries', views.summaries, name='summaries'),
 ]

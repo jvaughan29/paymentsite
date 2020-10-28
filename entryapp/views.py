@@ -9,7 +9,8 @@ from pdfrw import PdfReader, PdfWriter, PageMerge
 from django.template import loader
 
 from .forms import PaymentForm
-from .models import PaymentEntry
+from .models import PaymentEntry, Location
+
 
 def index(request):
     if request.method == "POST":
@@ -88,6 +89,37 @@ def receipt(request):
     form = merge(canvas_data, template_path='entryapp/Static/entryapp/Receipt_Template.pdf')
 
     return FileResponse(form, as_attachment=True, filename=invoice+'.pdf')
+
+def summaries(request):
+    # Create a file-like buffer to receive PDF data.
+    buffer = io.BytesIO()
+
+    # Create the PDF object, using the buffer as its "file."
+    p = canvas.Canvas(buffer)
+
+    # Draw things on the PDF. Here's where the PDF generation happens.
+    # See the ReportLab documentation for the full list of functionality.
+    locations_list = Location.objects.all()
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+    y = 900
+
+    for location in locations_list:
+        location_name = location.location
+        payment_list = PaymentEntry.objects.filter(entry_date__date=yesterday).filter()
+        p.drawString(100, y, location_name)
+
+
+    p.drawString(100, 100, "Hello world.")
+
+    # Close the PDF object cleanly, and we're done.
+    p.showPage()
+    p.save()
+
+    # FileResponse sets the Content-Disposition header so that browsers
+    # present the option to save the file.
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='hello.pdf')
 
 def results(request):
     return render(request, "entryapp/results.html")
