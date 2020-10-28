@@ -22,6 +22,18 @@
 <br/>
 <br/>
 
+<h2>Recent Payments</h2>
+
+{% if latest_payment_list %}
+    <ul>
+    {% for q in latest_payment_list %}
+        <p>{{ q.labid_text }}<p/>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No recent payments are available.</p>
+{% endif %}
+
 <h2>More Options</h2>
 
 <br/>

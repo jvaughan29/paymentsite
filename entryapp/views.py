@@ -6,6 +6,7 @@ import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 from pdfrw import PdfReader, PdfWriter, PageMerge
+from django.template import loader
 
 from .forms import PaymentForm
 from .models import PaymentEntry
@@ -135,5 +136,13 @@ def exportyesterday(request):
    response = HttpResponse(data, content_type='text/csv')
    response['Content-Disposition'] = 'attachment; filename="Payments.csv"'
    return response
+
+def recent(request):
+    latest_payment_list = PaymentEntry.objects.order_by('-entry_date')[:5]
+    template = loader.get_template('entryapp/results.html')
+    context = {
+        'latest_payment_list': latest_payment_list,
+    }
+    return HttpResponse(template.render(context, request))
 
 
