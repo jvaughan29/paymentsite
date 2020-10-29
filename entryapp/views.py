@@ -17,7 +17,7 @@ def index(request):
         form = PaymentForm(request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect("/complete")
+            return HttpResponseRedirect("complete")
     else:
         form = PaymentForm()
         return render(request, "entryapp/index.html", {"form": form})
@@ -102,15 +102,25 @@ def summaries(request):
     locations_list = Location.objects.all()
     today = datetime.date.today()
     yesterday = today - datetime.timedelta(days=1)
-    y = 900
+    y = 800
 
     for location in locations_list:
         location_name = location.location
-        payment_list = PaymentEntry.objects.filter(entry_date__date=yesterday).filter()
+        payment_list = PaymentEntry.objects.filter(entry_date__date=today)
         p.drawString(100, y, location_name)
-
-
-    p.drawString(100, 100, "Hello world.")
+        cash = 0.0
+        for q in payment_list:
+            cash = cash + q.cash_amount
+        cheque = 0.0
+        for q in payment_list:
+            cheque = cheque + q.cheque_amount
+        eftpos = 0.0
+        for x in payment_list:
+            eftpos = eftpos + x.eftpos_amount
+        p.drawString(100, y-20, "Cash ="+str(cash))
+        p.drawString(100, y-40, "Cheque ="+str(cheque))
+        p.drawString(100, y-60, "Eftpos ="+str(eftpos))
+    y=y-100
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -119,7 +129,7 @@ def summaries(request):
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='hello.pdf')
+    return FileResponse(buffer, as_attachment=True, filename='Summaries'+str(yesterday)+'.pdf')
 
 def results(request):
     return render(request, "entryapp/results.html")
@@ -157,7 +167,7 @@ def exportall(request):
   # Create the HttpResponse object with the appropriate CSV header.
    data = download_csv(request, PaymentEntry.objects.all())
    response = HttpResponse(data, content_type='text/csv')
-   response['Content-Disposition'] = 'attachment; filename="Payments.csv"'
+   response['Content-Disposition'] = 'attachment; filename="All Payments.csv"'
    return response
 
 def exportyesterday(request):
@@ -166,7 +176,7 @@ def exportyesterday(request):
    yesterday = today - datetime.timedelta(days=1)
    data = download_csv(request, PaymentEntry.objects.filter(entry_date__date=yesterday))
    response = HttpResponse(data, content_type='text/csv')
-   response['Content-Disposition'] = 'attachment; filename="Payments.csv"'
+   response['Content-Disposition'] = 'attachment;' 'filename=Payments for '+str(yesterday)+'.csv'
    return response
 
 def recent(request):
