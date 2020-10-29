@@ -12,7 +12,7 @@ from .forms import PaymentForm
 from .models import PaymentEntry, Location
 
 
-def index(request):
+def mainform(request):
     if request.method == "POST":
         form = PaymentForm(request.POST)
         if form.is_valid():
@@ -20,10 +20,12 @@ def index(request):
             return HttpResponseRedirect("complete")
     else:
         form = PaymentForm()
-        return render(request, "entryapp/index.html", {"form": form})
+        return render(request, "entryapp/form.html", {"form": form})
+
 
 def complete(request):
     return render(request, "entryapp/complete.html")
+
 
 def get_overlay_canvas() -> io.BytesIO:
     data = io.BytesIO()
@@ -43,8 +45,8 @@ def get_overlay_canvas() -> io.BytesIO:
     for x in latest_entry:
         eftpos = eftpos + x.eftpos_amount
     total = cash + cheque + eftpos
-    if (total*100) % 10 == 0:
-        paid = str(total)+"0"
+    if (total * 100) % 10 == 0:
+        paid = str(total) + "0"
     else:
         paid = str(total)
     location = ', '.join([str(q.location) for q in latest_entry])
@@ -54,7 +56,7 @@ def get_overlay_canvas() -> io.BytesIO:
     pdf.drawString(59, 480, name)
     pdf.drawString(216, 480, invoice)
     pdf.drawString(358, 480, "$" + paid)
-    #pdf.drawString(100, 540, "Location: " + location)
+    # pdf.drawString(100, 540, "Location: " + location)
     pdf.drawString(463, 480, date)
     pdf.drawString(280, 375, receipt)
     pdf.save()
@@ -73,13 +75,13 @@ def merge(overlay_canvas: io.BytesIO, template_path: str) -> io.BytesIO:
     form.seek(0)
     return form
 
-def receipt(request):
 
+def receipt(request):
     latest_entry = PaymentEntry.objects.order_by('-entry_date')[:1]
 
     name = ', '.join([q.name_text for q in latest_entry])
     invoice = ', '.join([q.labid_text for q in latest_entry])
-    #paid = ', '.join([str(q.amount_double) for q in latest_entry])
+    # paid = ', '.join([str(q.amount_double) for q in latest_entry])
     location = ', '.join([str(q.location) for q in latest_entry])
     receipt = ', '.join([q.receipt_number for q in latest_entry])
 
@@ -88,7 +90,8 @@ def receipt(request):
     canvas_data = get_overlay_canvas()
     form = merge(canvas_data, template_path='entryapp/Static/entryapp/Receipt_Template.pdf')
 
-    return FileResponse(form, as_attachment=True, filename=invoice+'.pdf')
+    return FileResponse(form, as_attachment=True, filename=invoice + '.pdf')
+
 
 def summaries(request):
     # Create a file-like buffer to receive PDF data.
@@ -117,10 +120,10 @@ def summaries(request):
         eftpos = 0.0
         for x in payment_list:
             eftpos = eftpos + x.eftpos_amount
-        p.drawString(100, y-20, "Cash ="+str(cash))
-        p.drawString(100, y-40, "Cheque ="+str(cheque))
-        p.drawString(100, y-60, "Eftpos ="+str(eftpos))
-    y=y-100
+        p.drawString(100, y - 20, "Cash =" + str(cash))
+        p.drawString(100, y - 40, "Cheque =" + str(cheque))
+        p.drawString(100, y - 60, "Eftpos =" + str(eftpos))
+    y = y - 100
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -129,62 +132,72 @@ def summaries(request):
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='Summaries'+str(yesterday)+'.pdf')
+    return FileResponse(buffer, as_attachment=True, filename='Summaries' + str(yesterday) + '.pdf')
+
 
 def results(request):
     return render(request, "entryapp/results.html")
 
+
 def download_csv(request, queryset):
+    model = queryset.model
+    model_fields = model._meta.fields + model._meta.many_to_many
+    field_names = [field.name for field in model_fields]
 
-  model = queryset.model
-  model_fields = model._meta.fields + model._meta.many_to_many
-  field_names = [field.name for field in model_fields]
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="export.csv"'
 
-  response = HttpResponse(content_type='text/csv')
-  response['Content-Disposition'] = 'attachment; filename="export.csv"'
+    # the csv writer
+    writer = csv.writer(response, delimiter=",")
+    # Write a first row with header information
+    writer.writerow(field_names)
+    # Write data rows
+    for row in queryset:
+        values = []
+        for field in field_names:
+            value = getattr(row, field)
+            if callable(value):
+                try:
+                    value = value() or ''
+                except:
+                    value = 'Error retrieving value'
+            if value is None:
+                value = ''
+            values.append(value)
+        writer.writerow(values)
+    return response
 
-  # the csv writer
-  writer = csv.writer(response, delimiter=",")
-  # Write a first row with header information
-  writer.writerow(field_names)
-  # Write data rows
-  for row in queryset:
-      values = []
-      for field in field_names:
-          value = getattr(row, field)
-          if callable(value):
-              try:
-                  value = value() or ''
-              except:
-                  value = 'Error retrieving value'
-          if value is None:
-              value = ''
-          values.append(value)
-      writer.writerow(values)
-  return response
 
 def exportall(request):
-  # Create the HttpResponse object with the appropriate CSV header.
-   data = download_csv(request, PaymentEntry.objects.all())
-   response = HttpResponse(data, content_type='text/csv')
-   response['Content-Disposition'] = 'attachment; filename="All Payments.csv"'
-   return response
+    # Create the HttpResponse object with the appropriate CSV header.
+    data = download_csv(request, PaymentEntry.objects.all())
+    response = HttpResponse(data, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="All Payments.csv"'
+    return response
+
 
 def exportyesterday(request):
-  # Create the HttpResponse object with the appropriate CSV header.
-   today = datetime.date.today()
-   yesterday = today - datetime.timedelta(days=1)
-   data = download_csv(request, PaymentEntry.objects.filter(entry_date__date=yesterday))
-   response = HttpResponse(data, content_type='text/csv')
-   response['Content-Disposition'] = 'attachment;' 'filename=Payments for '+str(yesterday)+'.csv'
-   return response
+    # Create the HttpResponse object with the appropriate CSV header.
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+    data = download_csv(request, PaymentEntry.objects.filter(entry_date__date=yesterday))
+    response = HttpResponse(data, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment;' 'filename=Payments for ' + str(yesterday) + '.csv'
+    return response
+
 
 def recent(request):
     latest_payment_list = PaymentEntry.objects.order_by('-entry_date')[:5]
-    template = loader.get_template('entryapp/results.html')
-    context = {
-        'latest_payment_list': latest_payment_list,
-    }
-    return HttpResponse(template.render(context, request))
+    context = {'latest_payment_list': latest_payment_list}
+    return render(request, 'entryapp/results.html', context)
 
 
+def deletepage(request):
+    return render(request, "entryapp/delete.html")
+
+
+def deleteall(request):
+    all_payments = PaymentEntry.objects.all()
+    for x in all_payments:
+        x.delete()
+    return render(request, "entryapp/results.html")

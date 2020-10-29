@@ -8,7 +8,7 @@
 
 <br/>
 
-<p>Download payments from previous day only</p>
+<p>Download payments from yesterday only</p>
 <button onclick="document.location='exportyesterday'" class="btn btn-secondary">Download</button>
 
 <br/>
@@ -22,7 +22,7 @@
 <br/>
 <br/>
 
-<p>Download collection centre summaries for previous day only (PDF)</p>
+<p>Download collection centre summaries for yesteday only (PDF)</p>
 <button onclick="document.location='summaries'" class="btn btn-secondary">Download</button>
 
 <br/>
@@ -49,6 +49,8 @@
 
 <br/>
 
-<button class="btn btn-secondary">Clear Database</button>
+<button onclick="document.location='deletepage'" class="btn btn-secondary">Clear Database</button>
+
+<p>This option will remove all payments from the database</p>
 
 {% endblock %}
